@@ -2,17 +2,40 @@ package main
 
 import (
 	"fmt"
-	"golang.org/x/tools/go/gcimporter15/testdata"
 )
 
 func intopost(infix string) string {
-	postfix := ""
+	specials := map[rune]int{'"': 10, '.': 9, '|': 8}
+	var s []rune
+	var pofix []rune
 
-	return postfix
+	for _, r := range infix {
+		switch {
+		case r == '(':
+			s = append(s, r)
+		case r == ')':
+			for s[len(s)-1] != '(' {
+				pofix, s = append(pofix, s[len(s)-1]), s[:len(s)-1]
+			}
+			s = s[:len(s)-1]
+		case specials[r] > 0:
+			for len(s) > 0 && specials[r] <= specials[s[len(s)-1]] {
+				pofix, s = append(pofix, s[len(s)-1]), s[:len(s)-1]
+			}
+			s = append(s, r)
+		default:
+			pofix = append(pofix, r)
+		}
+	}
+	for len(s) > 0 {
+		pofix, s = append(pofix, s[len(s)-1]), s[:len(s)-1]
+	}
+
+	return string(pofix)
 }
 func main() {
 	//answer should be ab.c*
-	fmt.Print("Infix:   ", "a.s.c*")
+	fmt.Print("Infix:   ", "a.b.c*")
 	fmt.Print("Postfix  ", intopost("a.b.c*"))
 
 	//answer should be abd|.*
